@@ -44,6 +44,7 @@ func Last[T Pointer](c *Cursor[T]) *Cursor[T] {
 // New creates a new cursor based on this limit and total.
 func New[T Pointer](limit, total int) *Cursor[T] {
 	c := Cursor[T]{Limit: limit}
+	c.Filters = make(url.Values)
 	if total > 0 {
 		c.Total = &total
 	}
