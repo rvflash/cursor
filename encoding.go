@@ -4,28 +4,32 @@ import (
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 )
 
 const (
 	cursorContent = iota
 	cursorSignature
-	cursorLen
+	_cursorLen
 )
 
 // Decrypt decrypts the cursor, ensures its integrity by verifying its HMAC signature.
 func Decrypt[T Pointer](content, secret []byte) (*Cursor[T], error) {
 	raw := bytes.Split(content, sep)
-	if len(raw) != cursorLen {
+	if len(raw) != _cursorLen {
 		return nil, fmt.Errorf("parsing: invalid cursor format")
 	}
-	mac := hmac.New(sha256.New, secret)
-	_, err := mac.Write(raw[cursorContent])
+	src, err := b64Decode(raw[cursorSignature])
 	if err != nil {
-		return nil, fmt.Errorf("hashing: %w", err)
+		return nil, fmt.Errorf("hash decoding: %w", err)
 	}
-	if !hmac.Equal(mac.Sum(nil), raw[cursorSignature]) {
-		return nil, fmt.Errorf("checking: %w", err)
+	sig, err := sign(raw[cursorContent], secret)
+	if err != nil {
+		return nil, fmt.Errorf("signature checking: %w", err)
+	}
+	if !hmac.Equal(src, sig) {
+		return nil, errors.New("signature mismatch")
 	}
 	var c Cursor[T]
 	err = c.Decode(raw[cursorContent])
@@ -45,14 +49,18 @@ func Encrypt[T Pointer](c *Cursor[T], secret []byte) ([]byte, error) {
 	if len(src) == 0 {
 		return nil, nil
 	}
-	mac := hmac.New(sha256.New, secret)
-	_, err = mac.Write(src)
+	sig, err := sign(src, secret)
 	if err != nil {
-		return nil, fmt.Errorf("hashing: %w", err)
+		return nil, fmt.Errorf("signing: %w", err)
 	}
-	sum := mac.Sum(nil)
-	dst := make([]byte, b64.EncodedLen(len(sum)))
-	b64.Encode(dst, sum)
+	return bytes.Join([][]byte{src, b64Encode(sig)}, sep), nil
+}
 
-	return bytes.Join([][]byte{src, dst}, sep), nil
+func sign(content, secret []byte) ([]byte, error) {
+	mac := hmac.New(sha256.New, secret)
+	_, err := mac.Write(content)
+	if err != nil {
+		return nil, err
+	}
+	return mac.Sum(nil), nil
 }

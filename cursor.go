@@ -22,6 +22,9 @@ func First[T Pointer](c *Cursor[T]) *Cursor[T] {
 	if c == nil || c.Prev == nil {
 		return nil
 	}
+	if t := *c.Prev; t.IsZero() {
+		return nil
+	}
 	return &Cursor[T]{
 		Prev:  new(T),
 		Limit: c.Limit,
@@ -32,6 +35,9 @@ func First[T Pointer](c *Cursor[T]) *Cursor[T] {
 // Last returns the cursor of the last page.
 func Last[T Pointer](c *Cursor[T]) *Cursor[T] {
 	if c == nil || c.Next == nil {
+		return nil
+	}
+	if t := *c.Next; t.IsZero() {
 		return nil
 	}
 	return &Cursor[T]{
@@ -56,6 +62,9 @@ func Next[T Pointer](c *Cursor[T]) *Cursor[T] {
 	if c == nil || c.Next == nil {
 		return nil
 	}
+	if t := *c.Next; t.IsZero() {
+		return nil
+	}
 	return &Cursor[T]{
 		Next:  c.Next,
 		Limit: c.Limit,
@@ -66,6 +75,9 @@ func Next[T Pointer](c *Cursor[T]) *Cursor[T] {
 // Prev returns the cursor of the previous page.
 func Prev[T Pointer](c *Cursor[T]) *Cursor[T] {
 	if c == nil || c.Prev == nil {
+		return nil
+	}
+	if t := *c.Prev; t.IsZero() {
 		return nil
 	}
 	return &Cursor[T]{
@@ -89,10 +101,13 @@ type Cursor[T Pointer] struct {
 
 // Add notifies a new entry to the managed list of result.
 func (c *Cursor[T]) Add(d T) {
+	if c.Limit == 0 {
+		return
+	}
 	switch c.cnt {
 	case 0:
 		c.Prev = &d
-	case c.Limit + 1:
+	case c.Limit:
 		c.Next = &d
 	}
 	c.cnt++
@@ -100,15 +115,14 @@ func (c *Cursor[T]) Add(d T) {
 
 // Decode decodes a plain cursor.
 func (c *Cursor[T]) Decode(text []byte) error {
-	src := make([]byte, b64.DecodedLen(len(text)))
-	n, err := b64.Decode(src, text)
+	src, err := b64Decode(text)
 	if err != nil {
 		return fmt.Errorf("decoding: %w", err)
 	}
 	c2 := &Cursor[T]{}
-	err = json.Unmarshal(src[:n], &c2)
+	err = json.Unmarshal(src[:], &c2)
 	if err != nil {
-		return fmt.Errorf("unmarshaling: %w", err)
+		return fmt.Errorf("unmarshalling: %w", err)
 	}
 	*c = *c2
 	return nil
@@ -123,11 +137,9 @@ func (c *Cursor[T]) Encode() ([]byte, error) {
 
 	src, err := json.Marshal(c)
 	if err != nil {
-		return nil, fmt.Errorf("marshaling: %w", err)
+		return nil, fmt.Errorf("marshalling: %w", err)
 	}
-	buf := make([]byte, b64.EncodedLen(len(src)))
-	b64.Encode(buf, src)
-	return buf, nil
+	return b64Encode(src), nil
 }
 
 // IsExpired returns true if the issued timestamp exceeds the max age allowed.
@@ -168,6 +180,19 @@ func (c *Cursor[T]) TotalPages() int {
 	}
 	return *c.Total / c.Limit
 }
+
 func (c *Cursor[T]) isEmpty() bool {
 	return c == nil || (c.Prev == nil && c.Next == nil)
+}
+
+func b64Decode(src []byte) ([]byte, error) {
+	dst := make([]byte, b64.DecodedLen(len(src)))
+	n, err := b64.Decode(dst, src)
+	return dst[:n], err
+}
+
+func b64Encode(src []byte) []byte {
+	dst := make([]byte, b64.EncodedLen(len(src)))
+	b64.Encode(dst, src)
+	return dst
 }

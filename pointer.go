@@ -13,14 +13,6 @@ func (n Int64) IsZero() bool {
 	return n == 0
 }
 
-// String manages string pointer.
-type String string
-
-// IsZero implements the Pointer interface.
-func (n String) IsZero() bool {
-	return n == ""
-}
-
 // List allows manipulation of a list of pointer data as pointer.
 type List []Pointer
 
@@ -35,4 +27,12 @@ func (l List) IsZero() bool {
 		}
 	}
 	return true
+}
+
+// String manages string pointer.
+type String string
+
+// IsZero implements the Pointer interface.
+func (n String) IsZero() bool {
+	return n == ""
 }

@@ -1,6 +1,9 @@
 package cursor
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 const (
 	mysqlQueryArg = "?"
@@ -36,13 +39,8 @@ func (s Statement[T]) Limit() int {
 	return s.Cursor.Limit + 1
 }
 
-// OrderBy returns the main clause to order the resultset based on the cursor column.
-func (s Statement[T]) OrderBy() string {
-	return s.orderBy(s.DescendingOrder)
-}
-
-// WithWhereCondition returns the condition that rows must satisfy to be selected.
-func (s Statement[T]) WithWhereCondition() string {
+// WhereCondition returns the condition that rows must satisfy to be selected.
+func (s Statement[T]) WhereCondition(columns ...string) string {
 	if s.Cursor.isEmpty() {
 		return ""
 	}
@@ -55,12 +53,19 @@ func (s Statement[T]) WithWhereCondition() string {
 	if p.IsZero() {
 		return ""
 	}
-	return fmt.Sprintf("%s %s", s.expr(), mysqlQueryArg)
+	if len(columns) > 0 {
+		buf := new(strings.Builder)
+		for k := range columns {
+			_, _ = fmt.Fprintf(buf, " AND %s %s %s", columns[k], s.expr(), mysqlQueryArg)
+		}
+		return buf.String()
+	}
+	return fmt.Sprintf(" %s %s", s.expr(), mysqlQueryArg)
 }
 
-// WithOrderBy returns the clause to order the selected and limited resultset.
+// OrderBy returns the clause to order the selected and limited resultset.
 // It differs from OrderBy to limit its scope to the WITH statement, also known as data source.
-func (s Statement[T]) WithOrderBy() string {
+func (s Statement[T]) OrderBy(columns ...string) string {
 	if s.Cursor.isEmpty() {
 		return ""
 	}
@@ -69,6 +74,16 @@ func (s Statement[T]) WithOrderBy() string {
 		desc = s.DescendingOrder
 	} else {
 		desc = !s.DescendingOrder
+	}
+	if len(columns) > 0 {
+		buf := new(strings.Builder)
+		for k := range columns {
+			if k > 0 {
+				_, _ = fmt.Fprint(buf, ", ")
+			}
+			_, _ = fmt.Fprintf(buf, "%s %s", columns[k], s.orderBy(desc))
+		}
+		return buf.String()
 	}
 	return s.orderBy(desc)
 }
@@ -88,7 +103,7 @@ func (s Statement[T]) expr() string {
 
 func (s Statement[T]) orderBy(desc bool) string {
 	if desc {
-		return "DESC"
+		return " DESC"
 	}
-	return "ASC"
+	return " ASC"
 }
