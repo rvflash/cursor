@@ -1,5 +1,11 @@
 # Cursor
 
+[![GoDoc](https://godoc.org/github.com/rvflash/cursor?status.svg)](https://godoc.org/github.com/rvflash/cursor)
+[![Build Status](https://github.com/rvflash/cursor/workflows/build/badge.svg)](https://github.com/rvflash/cursor/actions?workflow=build)
+[![Code Coverage](https://codecov.io/gh/rvflash/cursor/branch/main/graph/badge.svg)](https://codecov.io/gh/rvflash/cursor)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rvflash/cursor?)](https://goreportcard.com/report/github.com/rvflash/cursor)
+
+
 A lightweight, generic cursor-based pagination package for Go.
 Designed for MySQL and MariaDB, `cursor` lets you build encrypted, 
 stateless cursors that encode pagination state and query parameters safely.
