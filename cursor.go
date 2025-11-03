@@ -26,9 +26,10 @@ func First[T Pointer](c *Cursor[T]) *Cursor[T] {
 		return nil
 	}
 	return &Cursor[T]{
-		Prev:  new(T),
-		Limit: c.Limit,
-		Total: c.Total,
+		Prev:    new(T),
+		Limit:   c.Limit,
+		Total:   c.Total,
+		Filters: c.Filters,
 	}
 }
 
@@ -41,9 +42,10 @@ func Last[T Pointer](c *Cursor[T]) *Cursor[T] {
 		return nil
 	}
 	return &Cursor[T]{
-		Next:  new(T),
-		Limit: c.Limit,
-		Total: c.Total,
+		Next:    new(T),
+		Limit:   c.Limit,
+		Total:   c.Total,
+		Filters: c.Filters,
 	}
 }
 
@@ -66,9 +68,10 @@ func Next[T Pointer](c *Cursor[T]) *Cursor[T] {
 		return nil
 	}
 	return &Cursor[T]{
-		Next:  c.Next,
-		Limit: c.Limit,
-		Total: c.Total,
+		Next:    c.Next,
+		Limit:   c.Limit,
+		Total:   c.Total,
+		Filters: c.Filters,
 	}
 }
 
@@ -81,9 +84,10 @@ func Prev[T Pointer](c *Cursor[T]) *Cursor[T] {
 		return nil
 	}
 	return &Cursor[T]{
-		Prev:  c.Prev,
-		Limit: c.Limit,
-		Total: c.Total,
+		Prev:    c.Prev,
+		Limit:   c.Limit,
+		Total:   c.Total,
+		Filters: c.Filters,
 	}
 }
 

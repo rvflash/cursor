@@ -55,10 +55,10 @@ func TestPaginate(t *testing.T) {
 				},
 			},
 			out: &Pagination{
-				First: "eyJwcmV2IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTB9",
-				Prev:  "eyJwcmV2IjoxLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTB9",
-				Next:  "eyJuZXh0IjozLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTB9",
-				Last:  "eyJuZXh0IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTB9",
+				First: "eyJwcmV2IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19",
+				Prev:  "eyJwcmV2IjoxLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19",
+				Next:  "eyJuZXh0IjozLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19",
+				Last:  "eyJuZXh0IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19",
 			},
 		},
 		"Signed": {
@@ -73,10 +73,10 @@ func TestPaginate(t *testing.T) {
 			},
 			secret: []byte("ThisIsAnInsecureSecret!"),
 			out: &Pagination{
-				First: "eyJwcmV2IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTB9.",
-				Prev:  "eyJwcmV2IjoxLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTB9.",
-				Next:  "eyJuZXh0IjozLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTB9.",
-				Last:  "eyJuZXh0IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTB9.",
+				First: "eyJwcmV2IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19.",
+				Prev:  "eyJwcmV2IjoxLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19.",
+				Next:  "eyJuZXh0IjozLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19.",
+				Last:  "eyJuZXh0IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19.",
 			},
 		},
 	} {

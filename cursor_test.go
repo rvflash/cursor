@@ -400,7 +400,7 @@ func TestCursor_IsExpired(t *testing.T) {
 		},
 		"Not expired": {
 			in: &cursor.Cursor[cursor.Int64]{
-				IssuedAt: issuedAt,
+				IssuedAt: time.Now().AddDate(0, 0, 1).Unix(),
 			},
 			maxAge: 12 * time.Hour,
 		},

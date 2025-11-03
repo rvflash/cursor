@@ -19,7 +19,7 @@ const (
 // WITH d AS (
 //   SELECT * FROM table t WHERE cursor > ? ORDER BY cursor ASC LIMIT ?
 // )
-// SELECT * FROM p ORDER BY cursor DESC
+// SELECT * FROM p ORDER BY cursor DESC;
 //
 // Limit statement adds one to the cursor's limit in order to know the start of the next cursor
 // and if there is more data.
@@ -39,10 +39,30 @@ func (s Statement[T]) Limit() int {
 	return s.Cursor.Limit + 1
 }
 
+// OrderBy returns the clause to order the selected and limited resultset.
+// It differs from OrderBy to limit its scope to the WITH statement, also known as data source.
+func (s Statement[T]) OrderBy(columns ...string) string {
+	desc := s.DescendingOrder
+	if s.Cursor != nil && s.Cursor.Next != nil && (*s.Cursor.Next).IsZero() {
+		desc = !desc
+	}
+	if len(columns) > 0 {
+		buf := new(strings.Builder)
+		for k := range columns {
+			if k > 0 {
+				_, _ = fmt.Fprint(buf, ",")
+			}
+			_, _ = fmt.Fprintf(buf, " %s%s", columns[k], s.orderBy(desc))
+		}
+		return buf.String()
+	}
+	return s.orderBy(desc)
+}
+
 // WhereCondition returns the condition that rows must satisfy to be selected.
-func (s Statement[T]) WhereCondition(columns ...string) string {
+func (s Statement[T]) WhereCondition(columns ...string) (string, []any) {
 	if s.Cursor.isEmpty() {
-		return ""
+		return "", nil
 	}
 	var p Pointer
 	if s.Cursor.Next != nil {
@@ -51,45 +71,20 @@ func (s Statement[T]) WhereCondition(columns ...string) string {
 		p = *s.Cursor.Prev
 	}
 	if p.IsZero() {
-		return ""
+		return "", nil
 	}
 	if len(columns) > 0 {
 		buf := new(strings.Builder)
 		for k := range columns {
 			_, _ = fmt.Fprintf(buf, " AND %s %s %s", columns[k], s.expr(), mysqlQueryArg)
 		}
-		return buf.String()
+		return buf.String(), p.Args()
 	}
-	return fmt.Sprintf(" %s %s", s.expr(), mysqlQueryArg)
-}
-
-// OrderBy returns the clause to order the selected and limited resultset.
-// It differs from OrderBy to limit its scope to the WITH statement, also known as data source.
-func (s Statement[T]) OrderBy(columns ...string) string {
-	if s.Cursor.isEmpty() {
-		return ""
-	}
-	var desc bool
-	if s.Cursor.Next != nil {
-		desc = s.DescendingOrder
-	} else {
-		desc = !s.DescendingOrder
-	}
-	if len(columns) > 0 {
-		buf := new(strings.Builder)
-		for k := range columns {
-			if k > 0 {
-				_, _ = fmt.Fprint(buf, ", ")
-			}
-			_, _ = fmt.Fprintf(buf, "%s %s", columns[k], s.orderBy(desc))
-		}
-		return buf.String()
-	}
-	return s.orderBy(desc)
+	return fmt.Sprintf(" %s %s", s.expr(), mysqlQueryArg), p.Args()
 }
 
 func (s Statement[T]) expr() string {
-	if s.Cursor.Next == nil {
+	if s.Cursor.Next != nil {
 		if s.DescendingOrder {
 			return beforeExpr + equalExpr
 		}
