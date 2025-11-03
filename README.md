@@ -40,9 +40,101 @@ go get github.com/rvflash/cursor
 
 ## Example Usage
 
+Codes with multiple shortcuts for demonstration purposes only.
+
+### SQL statement
+
+
+```go
+type User struct {
+    ID        int64  `json:"id"`
+    Name      string `json:"name"`
+}
+
+func ListFromDatabase(ctx context.Context, st cursor.Statement[cursor.Int64]) ([]User, error) {
+	base := `SELECT id, name FROM users`
+
+	// WHERE uses the cursor semantics (e.g., "id < ?") under descending order
+	where, args := st.WhereCondition("id")
+    if len(args) > 0 {
+        where = "WHERE "
+    }
+	// LIMIT +1 to check if there is a next page.
+    args = append(args, st.Limit())
+	// ORDER BY applies the desired ordering for the limited page (e.g., "ORDER BY id DESC")
+	order := st.OrderBy("id")
+	query := base + where + " ORDER BY" + order + " LIMIT ?"
+
+	rows, err := r.DB.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+
+	var res []User
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.ID, &u.Name, &u.CreatedAt); err != nil {
+			return nil, err
+		}
+		res = append(res, u)
+	}
+	return res, rows.Err()
+}
+```
  
 ### Integrating with an HTTP API
 
 Example of returning paginated results in a REST response:
 ```go
+func HTTPHandler(w http.ResponseWriter, r *http.Request) {
+	// Build or decode the cursor
+	var cur *cursor.Cursor[cursor.Int64]
+	secret := []byte(os.Getenv("CURSOR_SECRET"))
+
+	if tok := r.URL.Query().Get("cursor"); tok != "" {
+		// Decrypt verifies HMAC and returns the cursor state
+		dec, err := cursor.Decrypt[cursor.Int64]([]byte(tok), secret)
+		if err != nil || dec.IsExpired(time.Hour) {
+			http.Error(w, "invalid or expired cursor", http.StatusBadRequest)
+			return
+		}
+		cur = dec
+	} else {
+		// New(limit, total). If you don’t know total, you can pass 0 (or compute it separately)
+		cur = cursor.New[cursor.Int64](20, 0)
+	}
+
+	// Build a Statement
+	st := cursor.Statement[cursor.Int64]{
+		Cursor:         cur,
+		DescendingOrder: true,
+	}
+
+	// SQL query
+	rows, err := ListFromDatabase(r.Context(), st)
+	if err != nil {
+		http.Error(w, "query error", http.StatusInternalServerError)
+		return
+	}
+
+	cur.Reset()
+	for _, u := range rows {
+		cur.Add(cursor.Int64(u.ID)) // we’re pointing by ID in this example
+	}
+
+	// Build pagination tokens: first/prev/next/last.
+	pg, err := cursor.Paginate(cur, secret)
+	if err != nil {
+		http.Error(w, "pagination error", http.StatusInternalServerError)
+		return
+	}
+
+	// Send response
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	_ = json.NewEncoder(w).Encode(usersResponse{
+		Data:       rows,
+		Pagination: pg,
+	})
+}
 ```
