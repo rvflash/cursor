@@ -36,6 +36,10 @@ func (s Statement[T]) Limit() int {
 	if s.Cursor == nil || s.Cursor.Limit == 0 {
 		return 0
 	}
+	if s.Cursor.Next != nil && (*s.Cursor.Next).IsZero() {
+		// Last page requested.
+		return s.Cursor.Limit
+	}
 	return s.Cursor.Limit + 1
 }
 

@@ -79,7 +79,7 @@ func ListFromDatabase(ctx context.Context, st cursor.Statement[cursor.Int64]) ([
 		}
 		res = append(res, u)
 	}
-	return res, rows.Err()
+	return res[:min(len(res), st.Cursor.Limit)], rows.Err()
 }
 ```
  

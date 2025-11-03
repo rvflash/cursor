@@ -190,6 +190,24 @@ func TestStatement_Limit(t *testing.T) {
 				Cursor: &cursor.Cursor[cursor.Int64]{},
 			},
 		},
+		"First page": {
+			in: cursor.Statement[cursor.Int64]{
+				Cursor: &cursor.Cursor[cursor.Int64]{
+					Limit: limit,
+					Prev:  new(cursor.Int64),
+				},
+			},
+			out: limit + 1,
+		},
+		"Last page": {
+			in: cursor.Statement[cursor.Int64]{
+				Cursor: &cursor.Cursor[cursor.Int64]{
+					Limit: limit,
+					Next:  new(cursor.Int64),
+				},
+			},
+			out: limit,
+		},
 		"OK": {
 			in: cursor.Statement[cursor.Int64]{
 				Cursor: &cursor.Cursor[cursor.Int64]{
