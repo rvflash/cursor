@@ -20,7 +20,8 @@ It is recommended to check the expiration date with `IsExpired(maxAge)` to avoid
 - `Pointer` defines the data types that can be used as a cursor to filter the query.
 Such as `Int64` to manage the auto-increment field.
 See also `String` or List to manage a set of `Pointer` as `Pointer`.
-Finally, `Limit` can be used as `Pointer` to transform the cursor into a standard LIMIT statement, with offset and row count.
+Finally, `RowCount` can be used as `Pointer` to transform the cursor into a standard LIMIT statement, 
+with offset and row count (also see Statement.Offset).
 
 
 ### Cursor Encoding Format
@@ -69,7 +70,9 @@ func ListFromDatabase(ctx context.Context, cur *cursor.Cursor[cursor.Int64]) ([]
     args = append(args, st.Limit())
     // ORDER BY applies the desired ordering for the limited page (e.g., "ORDER BY id DESC")
     query := `SELECT id, name FROM users` + where + " ORDER BY" + st.OrderBy("id") + " LIMIT ?"
-    
+    // Reset allows to reuse the current cursor to build the next ones.
+    cur.Reset()
+
     rows, err := DB.QueryContext(ctx, query, args...)
     if err != nil {
         return nil, err
@@ -85,6 +88,7 @@ func ListFromDatabase(ctx context.Context, cur *cursor.Cursor[cursor.Int64]) ([]
             return nil, err
         }
         res = append(res, u)
+        cur.Add(cursor.Int64(u.ID)) // we’re pointing by ID in this example
     }
     return res[:min(len(res), st.Cursor.Limit)], rows.Err()
 }
@@ -122,11 +126,6 @@ func HTTPHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "query error", http.StatusInternalServerError)
         return
     }
-    // Reset allows to reuse the current cursor to build the next ones.
-    cur.Reset()
-    for _, u := range rows {
-        cur.Add(cursor.Int64(u.ID)) // we’re pointing by ID in this example
-    }
     // Build pagination tokens: first/prev/next/last.
     pg, err := cursor.Paginate(cur, secret)
     if err != nil {
@@ -138,5 +137,10 @@ func HTTPHandler(w http.ResponseWriter, r *http.Request) {
         Data:       rows,
         Pagination: pg,
     })
+}
+
+type usersResponse struct {
+    Data        []User  `json:"data"`
+    Pagination  *cursor.Pagination `json:"cursor"`
 }
 ```
