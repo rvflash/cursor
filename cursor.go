@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/url"
 	"time"
 )
@@ -111,6 +112,8 @@ func (c *Cursor[T]) Add(d T) {
 	switch c.cnt {
 	case 0:
 		c.Prev = &d
+	case c.Limit - 1: // Deals with return to the first page.
+		fallthrough
 	case c.Limit:
 		c.Next = &d
 	}
@@ -182,7 +185,7 @@ func (c *Cursor[T]) TotalPages() int {
 	if c == nil || c.Total == nil || c.Limit == 0 {
 		return -1
 	}
-	return *c.Total / c.Limit
+	return int(math.Ceil(float64(*c.Total) / float64(c.Limit)))
 }
 
 func (c *Cursor[T]) isEmpty() bool {

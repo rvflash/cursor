@@ -477,6 +477,7 @@ func TestCursor_TotalPages(t *testing.T) {
 		"Default":       {out: -1},
 		"Blank":         {in: &cursor.Cursor[cursor.Int64]{}, out: -1},
 		"Total missing": {in: &cursor.Cursor[cursor.Int64]{Limit: limit}, out: -1},
+		"With ceiling":  {in: &cursor.Cursor[cursor.Int64]{Total: &sum, Limit: 3}, out: 4},
 		"OK":            {in: &cursor.Cursor[cursor.Int64]{Limit: limit, Total: &sum}, out: total / 2},
 	} {
 		t.Run(name, func(t *testing.T) {
