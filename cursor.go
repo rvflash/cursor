@@ -1,3 +1,7 @@
+// Copyright (c) 2025 Hervé Gouchet. All rights reserved.
+// Use of this source code is governed by the MIT License
+// that can be found in the LICENSE file.
+
 // Package cursor uses a reference point (cursor) to fetch the next set of results.
 // This reference point is typically a unique identifier that define the sort order.
 package cursor
