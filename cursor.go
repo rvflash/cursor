@@ -15,6 +15,8 @@ import (
 	"time"
 )
 
+const notFound = -1
+
 var (
 	// now is useful for tests purpose.
 	now = time.Now
@@ -24,7 +26,7 @@ var (
 
 // First returns the cursor of the first page.
 func First[T Pointer](c *Cursor[T]) *Cursor[T] {
-	if c == nil || c.Prev == nil {
+	if c == nil || c.Prev == nil || c.Offset == 0 {
 		return nil
 	}
 	if t := *c.Prev; t.IsZero() {
@@ -32,6 +34,7 @@ func First[T Pointer](c *Cursor[T]) *Cursor[T] {
 	}
 	return &Cursor[T]{
 		Prev:    new(T),
+		Offset:  0,
 		Limit:   c.Limit,
 		Total:   c.Total,
 		Filters: c.Filters,
@@ -46,8 +49,19 @@ func Last[T Pointer](c *Cursor[T]) *Cursor[T] {
 	if t := *c.Next; t.IsZero() {
 		return nil
 	}
+	var (
+		offset int
+		total  = c.TotalPages()
+	)
+	if total > notFound {
+		offset = c.Limit * (total - 1)
+	}
+	if c.Offset == offset-c.Limit {
+		return Next(c)
+	}
 	return &Cursor[T]{
 		Next:    new(T),
+		Offset:  offset,
 		Limit:   c.Limit,
 		Total:   c.Total,
 		Filters: c.Filters,
@@ -74,6 +88,7 @@ func Next[T Pointer](c *Cursor[T]) *Cursor[T] {
 	}
 	return &Cursor[T]{
 		Next:    c.Next,
+		Offset:  c.Offset + c.Limit,
 		Limit:   c.Limit,
 		Total:   c.Total,
 		Filters: c.Filters,
@@ -82,14 +97,18 @@ func Next[T Pointer](c *Cursor[T]) *Cursor[T] {
 
 // Prev returns the cursor of the previous page.
 func Prev[T Pointer](c *Cursor[T]) *Cursor[T] {
-	if c == nil || c.Prev == nil {
+	if c == nil || c.Prev == nil || c.Offset == 0 {
 		return nil
 	}
 	if t := *c.Prev; t.IsZero() {
 		return nil
 	}
+	if c.Offset == c.Limit {
+		return First(c)
+	}
 	return &Cursor[T]{
 		Prev:    c.Prev,
+		Offset:  c.Offset - c.Limit,
 		Limit:   c.Limit,
 		Total:   c.Total,
 		Filters: c.Filters,
@@ -98,9 +117,10 @@ func Prev[T Pointer](c *Cursor[T]) *Cursor[T] {
 
 // Cursor contains elements required to paginate based on a cursor, a data pointed the start of the data to list.
 type Cursor[T Pointer] struct {
-	Prev     *T         `json:"prev,omitempty"`
-	Next     *T         `json:"next,omitempty"`
-	IssuedAt int64      `json:"issued_at,omitempty"` // epoch seconds
+	Prev     *T    `json:"prev,omitempty"`
+	Next     *T    `json:"next,omitempty"`
+	IssuedAt int64 `json:"issued_at,omitempty"` // epoch seconds
+	Offset   int
 	Limit    int        `json:"limit"`
 	Total    *int       `json:"total,omitempty"`
 	Filters  url.Values `json:"filters,omitempty"`
@@ -116,12 +136,18 @@ func (c *Cursor[T]) Add(d T) {
 	switch c.cnt {
 	case 0:
 		c.Prev = &d
-	case c.Limit - 1: // Deals with return to the first page.
-		fallthrough
 	case c.Limit:
 		c.Next = &d
 	}
 	c.cnt++
+}
+
+// CurrentPage returns the current page number.
+func (c *Cursor[T]) CurrentPage() int {
+	if c == nil || c.Offset == 0 || c.Limit == 0 {
+		return 1
+	}
+	return 1 + (c.Offset / c.Limit)
 }
 
 // Decode decodes a plain cursor.
@@ -161,6 +187,7 @@ func (c *Cursor[T]) IsExpired(maxAge time.Duration) bool {
 // Reset resets the cursor allowing to reuse it in the same context.
 func (c *Cursor[T]) Reset() {
 	*c = Cursor[T]{
+		Offset:  c.Offset,
 		Limit:   c.Limit,
 		Total:   c.Total,
 		Filters: c.Filters,
@@ -179,7 +206,7 @@ func (c *Cursor[T]) String() string {
 // TotalItems returns the total number of items, or -1 if unknown.
 func (c *Cursor[T]) TotalItems() int {
 	if c == nil || c.Total == nil {
-		return -1
+		return notFound
 	}
 	return *c.Total
 }
@@ -187,7 +214,7 @@ func (c *Cursor[T]) TotalItems() int {
 // TotalPages returns the total number of pages, or -1 if unknown.
 func (c *Cursor[T]) TotalPages() int {
 	if c == nil || c.Total == nil || c.Limit == 0 {
-		return -1
+		return notFound
 	}
 	return int(math.Ceil(float64(*c.Total) / float64(c.Limit)))
 }

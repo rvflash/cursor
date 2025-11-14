@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+const (
+	b64NoMore = "eyJwcmV2IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsIk9mZnNldCI6MCwibGltaXQiOjJ9"
+)
+
 func TestPaginate(t *testing.T) {
 	// No parallelization here due to global variable overloading.
 	now = fakeNow
@@ -38,17 +42,18 @@ func TestPaginate(t *testing.T) {
 		"Default": {
 			out: &Pagination{},
 		},
-		"Simple": {
+		"No more": {
 			cursor: &Cursor[Int64]{
-				Limit: limit,
-				Prev:  &prv,
+				Offset: limit,
+				Limit:  limit,
+				Prev:   &prv,
 			},
 			out: &Pagination{
-				First: "eyJwcmV2IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyfQ",
-				Prev:  "eyJwcmV2IjoxLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyfQ",
+				First: b64NoMore,
+				Prev:  b64NoMore,
 			},
 		},
-		"OK": {
+		"First Page": {
 			cursor: &Cursor[Int64]{
 				Limit: limit,
 				Total: &sum,
@@ -59,28 +64,45 @@ func TestPaginate(t *testing.T) {
 				},
 			},
 			out: &Pagination{
-				First: "eyJwcmV2IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19",
-				Prev:  "eyJwcmV2IjoxLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19",
-				Next:  "eyJuZXh0IjozLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19",
-				Last:  "eyJuZXh0IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19",
+				Next: "eyJuZXh0IjozLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsIk9mZnNldCI6MiwibGltaXQiOjIsInRvdGFsIjoxMCwiZmlsdGVycyI6eyJuZXciOlsidHJ1ZSJdfX0",
+				Last: "eyJuZXh0IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsIk9mZnNldCI6OCwibGltaXQiOjIsInRvdGFsIjoxMCwiZmlsdGVycyI6eyJuZXciOlsidHJ1ZSJdfX0",
+			},
+		},
+		"OK": {
+			cursor: &Cursor[Int64]{
+				Offset: limit,
+				Limit:  limit,
+				Total:  &sum,
+				Prev:   &prv,
+				Next:   &nxt,
+				Filters: url.Values{
+					"new": []string{"true"},
+				},
+			},
+			out: &Pagination{
+				First: "eyJwcmV2IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsIk9mZnNldCI6MCwibGltaXQiOjIsInRvdGFsIjoxMCwiZmlsdGVycyI6eyJuZXciOlsidHJ1ZSJdfX0",
+				Prev:  "eyJwcmV2IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsIk9mZnNldCI6MCwibGltaXQiOjIsInRvdGFsIjoxMCwiZmlsdGVycyI6eyJuZXciOlsidHJ1ZSJdfX0",
+				Next:  "eyJuZXh0IjozLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsIk9mZnNldCI6NCwibGltaXQiOjIsInRvdGFsIjoxMCwiZmlsdGVycyI6eyJuZXciOlsidHJ1ZSJdfX0",
+				Last:  "eyJuZXh0IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsIk9mZnNldCI6OCwibGltaXQiOjIsInRvdGFsIjoxMCwiZmlsdGVycyI6eyJuZXciOlsidHJ1ZSJdfX0",
 			},
 		},
 		"Signed": {
 			cursor: &Cursor[Int64]{
-				Limit: limit,
-				Total: &sum,
-				Prev:  &prv,
-				Next:  &nxt,
+				Offset: limit,
+				Limit:  limit,
+				Total:  &sum,
+				Prev:   &prv,
+				Next:   &nxt,
 				Filters: url.Values{
 					"new": []string{"true"},
 				},
 			},
 			secret: []byte("ThisIsAnInsecureSecret!"),
 			out: &Pagination{
-				First: "eyJwcmV2IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19.",
-				Prev:  "eyJwcmV2IjoxLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19.",
-				Next:  "eyJuZXh0IjozLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19.",
-				Last:  "eyJuZXh0IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjoyLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19.",
+				First: "eyJwcmV2IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsIk9mZnNldCI6MCwibGltaXQiOjIsInRvdGFsIjoxMCwiZmlsdGVycyI6eyJuZXciOlsidHJ1ZSJdfX0.",
+				Prev:  "eyJwcmV2IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsIk9mZnNldCI6MCwibGltaXQiOjIsInRvdGFsIjoxMCwiZmlsdGVycyI6eyJuZXciOlsidHJ1ZSJdfX0.",
+				Next:  "eyJuZXh0IjozLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsIk9mZnNldCI6NCwibGltaXQiOjIsInRvdGFsIjoxMCwiZmlsdGVycyI6eyJuZXciOlsidHJ1ZSJdfX0.",
+				Last:  "eyJuZXh0IjowLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsIk9mZnNldCI6OCwibGltaXQiOjIsInRvdGFsIjoxMCwiZmlsdGVycyI6eyJuZXciOlsidHJ1ZSJdfX0.",
 			},
 		},
 	} {

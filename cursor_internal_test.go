@@ -11,6 +11,11 @@ import (
 	"time"
 )
 
+const (
+	b64Simple = "eyJwcmV2IjoxLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsIk9mZnNldCI6MCwibGltaXQiOjN9"
+	b64New    = "eyJwcmV2IjoxLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsIk9mZnNldCI6MCwibGltaXQiOjMsInRvdGFsIjoxMCwiZmlsdGVycyI6eyJuZXciOlsidHJ1ZSJdfX0"
+)
+
 func TestCursor_Encode(t *testing.T) {
 	// No parallelization here due to global variable overloading.
 	now = fakeNow
@@ -35,7 +40,7 @@ func TestCursor_Encode(t *testing.T) {
 				Limit: limit,
 				Prev:  &prv,
 			},
-			out: []byte("eyJwcmV2IjoxLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjozfQ"),
+			out: []byte(b64Simple),
 		},
 		"OK": {
 			in: Cursor[Int64]{
@@ -46,7 +51,7 @@ func TestCursor_Encode(t *testing.T) {
 					"new": []string{"true"},
 				},
 			},
-			out: []byte("eyJwcmV2IjoxLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjozLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19"),
+			out: []byte(b64New),
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -85,7 +90,7 @@ func TestCursor_String(t *testing.T) {
 				Limit: limit,
 				Prev:  &prv,
 			},
-			out: "eyJwcmV2IjoxLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjozfQ",
+			out: b64Simple,
 		},
 		"OK": {
 			in: Cursor[Int64]{
@@ -96,7 +101,7 @@ func TestCursor_String(t *testing.T) {
 					"new": []string{"true"},
 				},
 			},
-			out: "eyJwcmV2IjoxLCJpc3N1ZWRfYXQiOjE3NjIxMDEzMzYsImxpbWl0IjozLCJ0b3RhbCI6MTAsImZpbHRlcnMiOnsibmV3IjpbInRydWUiXX19",
+			out: b64New,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {

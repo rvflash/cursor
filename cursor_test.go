@@ -36,34 +36,42 @@ func TestFirst(t *testing.T) {
 		"Default": {},
 		"Nothing before": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Next: &nxt,
+				Limit: limit,
+				Next:  &nxt,
 			},
 		},
 		"Nothing after": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Prev: &prv,
+				Offset: limit,
+				Limit:  limit,
+				Prev:   &prv,
 			},
 			out: &cursor.Cursor[cursor.Int64]{
-				Prev: new(cursor.Int64),
+				Limit: limit,
+				Prev:  new(cursor.Int64),
 			},
 		},
 		"First page": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Prev: new(cursor.Int64),
+				Limit: limit,
+				Prev:  new(cursor.Int64),
 			},
 		},
 		"Last page": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Next: new(cursor.Int64),
+				Limit: limit,
+				Next:  new(cursor.Int64),
 			},
 		},
 		"OK": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Prev: &prv,
-				Next: &nxt,
+				Offset: limit,
+				Limit:  limit,
+				Prev:   &nxt,
 			},
 			out: &cursor.Cursor[cursor.Int64]{
-				Prev: new(cursor.Int64),
+				Limit: limit,
+				Prev:  new(cursor.Int64),
 			},
 		},
 	} {
@@ -92,34 +100,41 @@ func TestLast(t *testing.T) {
 		"Default": {},
 		"Nothing before": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Next: &nxt,
+				Limit: limit,
+				Next:  &nxt,
 			},
 			out: &cursor.Cursor[cursor.Int64]{
-				Next: new(cursor.Int64),
+				Limit: limit,
+				Next:  new(cursor.Int64),
 			},
 		},
 		"Nothing after": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Prev: &prv,
+				Limit: limit,
+				Prev:  &prv,
 			},
 		},
 		"First page": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Prev: new(cursor.Int64),
+				Limit: limit,
+				Prev:  new(cursor.Int64),
 			},
 		},
 		"Last page": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Next: new(cursor.Int64),
+				Limit: limit,
+				Next:  new(cursor.Int64),
 			},
 		},
 		"OK": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Prev: &prv,
-				Next: &nxt,
+				Limit: limit,
+				Prev:  &prv,
+				Next:  &nxt,
 			},
 			out: &cursor.Cursor[cursor.Int64]{
-				Next: new(cursor.Int64),
+				Limit: limit,
+				Next:  new(cursor.Int64),
 			},
 		},
 	} {
@@ -148,34 +163,43 @@ func TestNext(t *testing.T) {
 		"Default": {},
 		"Nothing before": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Next: &nxt,
+				Limit: limit,
+				Next:  &nxt,
 			},
 			out: &cursor.Cursor[cursor.Int64]{
-				Next: &nxt,
+				Offset: limit,
+				Limit:  limit,
+				Next:   &nxt,
 			},
 		},
 		"Nothing after": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Prev: &prv,
+				Limit: limit,
+				Prev:  &prv,
 			},
 		},
 		"First page": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Prev: new(cursor.Int64),
+				Limit: limit,
+				Prev:  new(cursor.Int64),
 			},
 		},
 		"Last page": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Next: new(cursor.Int64),
+				Limit: limit,
+				Next:  new(cursor.Int64),
 			},
 		},
 		"OK": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Prev: &prv,
-				Next: &nxt,
+				Limit: limit,
+				Prev:  &prv,
+				Next:  &nxt,
 			},
 			out: &cursor.Cursor[cursor.Int64]{
-				Next: &nxt,
+				Limit:  limit,
+				Offset: limit,
+				Next:   &nxt,
 			},
 		},
 	} {
@@ -194,8 +218,10 @@ func TestPrev(t *testing.T) {
 	t.Parallel()
 
 	var (
-		prv = cursor.Int64(prev)
-		nxt = cursor.Int64(next)
+		one  = cursor.Int64(0)
+		prv  = cursor.Int64(prev)
+		nxt  = cursor.Int64(next)
+		four = cursor.Int64(next + limit)
 	)
 	for name, tc := range map[string]struct {
 		in  *cursor.Cursor[cursor.Int64]
@@ -204,34 +230,56 @@ func TestPrev(t *testing.T) {
 		"Default": {},
 		"Nothing before": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Next: &nxt,
+				Limit: limit,
+				Next:  &nxt,
 			},
 		},
 		"Nothing after": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Prev: &prv,
+				Offset: limit,
+				Limit:  limit,
+				Prev:   &prv,
 			},
 			out: &cursor.Cursor[cursor.Int64]{
-				Prev: &prv,
+				Limit: limit,
+				Prev:  &one,
 			},
 		},
 		"First page": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Prev: new(cursor.Int64),
+				Limit: limit,
+				Prev:  new(cursor.Int64),
 			},
 		},
 		"Last page": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Next: new(cursor.Int64),
+				Limit: limit,
+				Next:  new(cursor.Int64),
 			},
 		},
-		"OK": {
+		"Page 2": {
 			in: &cursor.Cursor[cursor.Int64]{
-				Prev: &prv,
-				Next: &nxt,
+				Offset: limit,
+				Limit:  limit,
+				Prev:   &prv,
+				Next:   &nxt,
 			},
 			out: &cursor.Cursor[cursor.Int64]{
-				Prev: &prv,
+				Limit: limit,
+				Prev:  &one,
+			},
+		},
+		"Page 3": {
+			in: &cursor.Cursor[cursor.Int64]{
+				Offset: limit * 2,
+				Limit:  limit,
+				Prev:   &nxt,
+				Next:   &four,
+			},
+			out: &cursor.Cursor[cursor.Int64]{
+				Offset: limit,
+				Limit:  limit,
+				Prev:   &nxt,
 			},
 		},
 	} {
@@ -342,6 +390,29 @@ func TestCursor_Add(t *testing.T) {
 			}
 			if !reflect.DeepEqual(tc.in.Next, tc.out.Next) {
 				t.Errorf("\ngot %#v\nexp %#v", tc.in.Next, tc.out.Next)
+			}
+		})
+	}
+}
+
+func TestCursor_CurrentPage(t *testing.T) {
+	t.Parallel()
+
+	for name, tc := range map[string]struct {
+		in  *cursor.Cursor[cursor.Int64]
+		out int
+	}{
+		"Default":    {out: 1},
+		"Blank":      {in: &cursor.Cursor[cursor.Int64]{}, out: 1},
+		"First page": {in: &cursor.Cursor[cursor.Int64]{Limit: limit}, out: 1},
+		"OK":         {in: &cursor.Cursor[cursor.Int64]{Limit: limit, Offset: limit * 3}, out: 4},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			out := tc.in.CurrentPage()
+			if out != tc.out {
+				t.Errorf("\ngot %#v\nexp %#v", out, tc.out)
 			}
 		})
 	}

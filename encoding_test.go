@@ -70,7 +70,7 @@ func TestEncrypt(t *testing.T) {
 				Next: new(cursor.Int64),
 			},
 			secret: []byte(secret),
-			size:   102,
+			size:   116,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
