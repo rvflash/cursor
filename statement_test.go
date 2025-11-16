@@ -295,7 +295,7 @@ func TestStatement_OrderBy(t *testing.T) {
 				},
 				DescendingOrder: true,
 			},
-			out: " DESC",
+			out: " ASC",
 		},
 		"Descending - Prev page - One column": {
 			in: cursor.Statement[cursor.Int64]{
@@ -306,7 +306,7 @@ func TestStatement_OrderBy(t *testing.T) {
 				DescendingOrder: true,
 			},
 			cols: []string{"col01"},
-			out:  " col01 DESC",
+			out:  " col01 ASC",
 		},
 		"Descending - Prev page - Some columns": {
 			in: cursor.Statement[cursor.Int64]{
@@ -317,7 +317,7 @@ func TestStatement_OrderBy(t *testing.T) {
 				DescendingOrder: true,
 			},
 			cols: []string{"col01", "a.col02"},
-			out:  " col01 DESC, a.col02 DESC",
+			out:  " col01 ASC, a.col02 ASC",
 		},
 		"Descending - Next page - No column": {
 			in: cursor.Statement[cursor.Int64]{
@@ -406,7 +406,7 @@ func TestStatement_OrderBy(t *testing.T) {
 				},
 				DescendingOrder: false,
 			},
-			out: " ASC",
+			out: " DESC",
 		},
 		"Ascending - Prev page - One column": {
 			in: cursor.Statement[cursor.Int64]{
@@ -417,7 +417,7 @@ func TestStatement_OrderBy(t *testing.T) {
 				DescendingOrder: false,
 			},
 			cols: []string{"col01"},
-			out:  " col01 ASC",
+			out:  " col01 DESC",
 		},
 		"Ascending - Prev page - Some columns": {
 			in: cursor.Statement[cursor.Int64]{
@@ -428,7 +428,7 @@ func TestStatement_OrderBy(t *testing.T) {
 				DescendingOrder: false,
 			},
 			cols: []string{"col01", "a.col02"},
-			out:  " col01 ASC, a.col02 ASC",
+			out:  " col01 DESC, a.col02 DESC",
 		},
 		"Ascending - Next page - No column": {
 			in: cursor.Statement[cursor.Int64]{

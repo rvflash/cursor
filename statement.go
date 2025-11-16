@@ -51,7 +51,8 @@ func (s Statement[T]) Limit() int {
 // It differs from OrderBy to limit its scope to the WITH statement, also known as data source.
 func (s Statement[T]) OrderBy(columns ...string) string {
 	desc := s.DescendingOrder
-	if s.Cursor != nil && s.Cursor.Next != nil && (*s.Cursor.Next).IsZero() {
+	if s.Cursor != nil &&
+		((s.Cursor.Prev != nil && !(*s.Cursor.Prev).IsZero()) || (s.Cursor.Next != nil && (*s.Cursor.Next).IsZero())) {
 		desc = !desc
 	}
 	if len(columns) > 0 {
